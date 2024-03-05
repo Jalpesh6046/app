@@ -1,45 +1,54 @@
-import pickle
+
 import streamlit as st
-import pandas as pd
-import numpy as np 
+import requests
 
+# Define your API endpoint
+API_ENDPOINT = "https://api.render.com/v1/owners?name=&limit=20"
 
-pickle_in = open("model.pkl", "rb")
-model = pickle.load(pickle_in)
-
-def predict_output(Index, experience, test_score):
-    
-    Index = float(Index)
+def predict_output(index, experience, test_score, api_key):
+    index = float(index)
     experience = float(experience)
     test_score = float(test_score)
-    
-    prediction = model.predict([[Index, experience, test_score]])
-    
-    return prediction
+
+    # Make a POST request to the API endpoint with the payload and API key
+    payload = {
+        "Index": index,
+        "experience": experience,
+        "test_score": test_score
+    }
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    response = requests.post(API_ENDPOINT, json=payload, headers=headers)
+
+    # Check if the request was successful and return the prediction
+    if response.status_code == 200:
+        prediction = response.json()["prediction"]
+        return prediction
+    else:
+        st.error("Failed to get prediction from the API")
+        return None
 
 def main():
-    html_temp = """
-<div style ="background-color: skyblue; padding: 1px">
-<h2 style ="color: black; text-align:center;">Salary Prediction </h2>
-</div>
-    """
-    st.markdown(html_temp, unsafe_allow_html=True)
-    st.write("&nbsp;")
-    
-    Index= st.text_input("Index*")
-    experience= st.text_input("Number of years experience*")
-    test_score=st.text_input("test_score*")
-    
+    st.title("Salary Prediction App")
+
+    # User input for API key
+    api_key = st.text_input("Enter your API key:", type="password")
+
+    # User input for salary prediction
+    index = st.text_input("Index*")
+    experience = st.text_input("Number of years experience*")
+    test_score = st.text_input("Test score*")
+
+    # Perform prediction when the user clicks the button
     if st.button("Predict"):
-
-        if Index and experience and test_score:
-
-            result = predict_output(Index, experience, test_score)
-            st.success("Predicted Salary: ${:.2f}".format(result[0]))
+        if index and experience and test_score and api_key:
+            result = predict_output(index, experience, test_score, api_key)
+            if result is not None:
+                st.success("Predicted Salary: ${:.2f}".format(result))
         else:
-            st.error("Please fill in all the required fields.")
-
+            st.error("Please fill in all the required fields including the API key.")
 
 if __name__ == "__main__":
     main()
-    
