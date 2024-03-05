@@ -1,54 +1,35 @@
-
+import os
+import pickle
 import streamlit as st
-import requests
+import pandas as pd
+import numpy as np
+api_key = os.getenv("API_KEY")
 
-# Define your API endpoint
-API_ENDPOINT = "https://app-gzqz.onrender.com/"
-
-def predict_output(index, experience, test_score, api_key):
-    index = float(index)
-    experience = float(experience)
-    test_score = float(test_score)
-
-    # Make a POST request to the API endpoint with the payload and API key
-    payload = {
-        "Index": index,
-        "experience": experience,
-        "test_score": test_score
-    }
-    headers = {
-        "accept": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
-    response = requests.post(API_ENDPOINT, json=payload, headers=headers)
-
-    # Check if the request was successful and return the prediction
-    if response.status_code == 200:
-        prediction = response.json()["prediction"]
-        return prediction
-    else:
-        st.error("Failed to get prediction from the API")
-        return None
-
+if not api_key:
+    st.error("API key not found. Please set the `API_KEY` environment variable.")
+    st.stop()  # Halt app execution if no API key is found
 def main():
-    st.title("Salary Prediction App")
+    html_temp = """
+    <div style ="background-color: skyblue; padding: 1px">
+    <h2 style ="color: black; text-align:center;">Salary Prediction </h2>
+    </div>
+    """
+    st.markdown(html_temp, unsafe_allow_html=True)
+    st.write("&nbsp;")
 
-    # User input for API key
-    api_key = st.text_input("Enter your API key:", type="password")
+    # Input field for API key
+    entered_api_key = st.text_input("API Key")
 
-    # User input for salary prediction
-    index = st.text_input("Index*")
-    experience = st.text_input("Number of years experience*")
-    test_score = st.text_input("Test score*")
+    if entered_api_key.strip() == api_key:  # Check key validity after trimming whitespace
+        Index = st.text_input("Index*")
+        experience = st.text_input("Number of years experience*")
+        test_score = st.text_input("test_score*")
 
-    # Perform prediction when the user clicks the button
-    if st.button("Predict"):
-        if index and experience and test_score and api_key:
-            result = predict_output(index, experience, test_score, api_key)
-            if result is not None:
-                st.success("Predicted Salary: ${:.2f}".format(result))
-        else:
-            st.error("Please fill in all the required fields including the API key.")
-
-if __name__ == "__main__":
-    main()
+        if st.button("Predict"):
+            if Index and experience and test_score:
+                result = predict_output(Index, experience, test_score)
+                st.success("Predicted Salary: ${:.2f}".format(result[0]))
+            else:
+                st.error("Please fill in all the required fields.")
+    else:
+        st.error("Invalid API key. Please enter the correct key to proceed.")
