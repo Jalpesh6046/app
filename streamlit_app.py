@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 
 # Define your API endpoint
-API_ENDPOINT = "https://api.render.com/v1/owners?name=&limit=20"
+API_ENDPOINT = "https://app-gzqz.onrender.com/"
 
 def predict_output(index, experience, test_score, api_key):
     index = float(index)
